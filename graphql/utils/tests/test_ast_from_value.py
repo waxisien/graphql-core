@@ -1,16 +1,20 @@
 from collections import OrderedDict
 
+from graphql import Undefined
 from graphql.language import ast
 from graphql.type.definition import (GraphQLEnumType, GraphQLEnumValue,
                                      GraphQLInputObjectField,
-                                     GraphQLInputObjectType, GraphQLList)
-from graphql.type.scalars import GraphQLFloat
+                                     GraphQLInputObjectType, GraphQLList, GraphQLNonNull)
+from graphql.type.scalars import GraphQLFloat, GraphQLBoolean, GraphQLString
 from graphql.utils.ast_from_value import ast_from_value
-
 
 def test_converts_boolean_values_to_asts():
     assert ast_from_value(True) == ast.BooleanValue(True)
     assert ast_from_value(False) == ast.BooleanValue(False)
+    assert ast_from_value(None, ast.BooleanValue) == ast.NullValue()
+
+    nonNullBoolean = GraphQLNonNull(GraphQLBoolean)
+    assert ast_from_value(False, nonNullBoolean) == ast.BooleanValue(False)
 
 
 def test_converts_numeric_values_to_asts():
@@ -27,6 +31,7 @@ def test_it_converts_numeric_values_to_float_asts():
     assert ast_from_value(123.5, GraphQLFloat) == ast.FloatValue('123.5')
     assert ast_from_value(1e4, GraphQLFloat) == ast.FloatValue('10000.0')
     assert ast_from_value(1e40, GraphQLFloat) == ast.FloatValue('1e+40')
+    assert ast_from_value(None, GraphQLFloat) == ast.NullValue()
 
 
 def test_it_converts_string_values_to_asts():
@@ -35,6 +40,12 @@ def test_it_converts_string_values_to_asts():
     assert ast_from_value(u'VAL\nUE') == ast.StringValue('VAL\\nUE')
     assert ast_from_value('VAL\nUE') == ast.StringValue('VAL\\nUE')
     assert ast_from_value('123') == ast.StringValue('123')
+    assert ast_from_value(None, GraphQLString) == ast.NullValue()
+
+
+def test_does_not_converts_nonnull_values_to_nullvalue():
+    nonNullBoolean = GraphQLNonNull(GraphQLBoolean)
+    assert ast_from_value(None, nonNullBoolean).value is None
 
 
 my_enum = GraphQLEnumType(
@@ -44,6 +55,24 @@ my_enum = GraphQLEnumType(
     }
 )
 
+
+def test_converts_input_objects_with_explicit_nulls():
+    input_obj = GraphQLInputObjectType('MyInputObj', {
+        'foo': GraphQLInputObjectField(GraphQLFloat),
+        'bar': GraphQLInputObjectField(my_enum)
+    })
+
+    value = OrderedDict([
+        ('foo', None),
+    ])
+    assert ast_from_value(value, input_obj) == ast.ObjectValue(
+        fields=[
+            ast.ObjectField(
+                name=ast.Name('foo'),
+                value=ast.NullValue()
+            ),
+        ]
+    )
 
 def test_converts_string_values_to_enum_asts_if_possible():
     assert ast_from_value('hello', my_enum) == ast.EnumValue('hello')

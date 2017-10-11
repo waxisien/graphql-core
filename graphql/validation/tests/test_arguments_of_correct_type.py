@@ -13,6 +13,15 @@ def bad_value(arg_name, type_name, value, line, column, errors=None):
         'locations': [SourceLocation(line, column)]
     }
 
+def bad_value_non_null(arg_name, type_name, value, line, column, errors=None):
+    if not errors:
+        errors = [u'Expected "{}", found {}.'.format(type_name, value)]
+
+    return {
+        'message': ArgumentsOfCorrectType.bad_value_message(arg_name, type_name, value, errors),
+        'locations': [SourceLocation(line, column)]
+    }
+
 
 # noinspection PyMethodMayBeStatic
 class TestValidValues(object):
@@ -85,6 +94,23 @@ class TestValidValues(object):
         {
             dog {
                 doesKnowCommand(dogCommand: SIT)
+            }
+        }
+        ''')
+
+    def test_null_into_nullable_type(self):
+        expect_passes_rule(ArgumentsOfCorrectType, '''
+        {
+            complicatedArgs {
+                intArgField(intArg: null)
+            }
+        }
+        ''')
+
+        expect_passes_rule(ArgumentsOfCorrectType, '''
+        {
+            dog(a: null, b: null, c:{ requiredField: true, intField: null }) {
+                name
             }
         }
         ''')
@@ -396,7 +422,7 @@ class TestValidListValues(object):
         expect_passes_rule(ArgumentsOfCorrectType, '''
         {
             complicatedArgs {
-                stringListArgField(stringListArg: ["one", "two"])
+                stringListArgField(stringListArg: ["one", null, "two"])
             }
         }
         ''')
@@ -406,6 +432,15 @@ class TestValidListValues(object):
         {
             complicatedArgs {
                 stringListArgField(stringListArg: [])
+            }
+        }
+        ''')
+
+    def test_null_value(self):
+        expect_passes_rule(ArgumentsOfCorrectType, '''
+        {
+            complicatedArgs {
+                stringListArgField(stringListArg: null)
             }
         }
         ''')
@@ -558,6 +593,18 @@ class TestInvalidNonNullableValues(object):
         ''', [
             bad_value('req1', 'Int', '"one"', 4, 36)
         ])
+
+    def test_null_value(self):
+        expect_fails_rule(ArgumentsOfCorrectType, '''
+        {
+            complicatedArgs {
+                multipleReqs(req1: null)
+            }
+        }
+        ''', [
+            bad_value_non_null('req1', 'Int!', 'null', 4, 36)
+        ])
+
 
 
 # noinspection PyMethodMayBeStatic

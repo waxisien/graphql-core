@@ -53,7 +53,7 @@ fragment frag on Friend {
 }
 
 {
-  unnamed(truthy: true, falsey: false),
+  unnamed(truthy: true, falsey: false, nullish: null),
   query
 }
 """
@@ -79,6 +79,7 @@ type Foo implements Bar {
   four(argument: String = "string"): String
   five(argument: [String] = ["string", "string"]): String
   six(argument: InputType = {key: "value"}): Type
+  seven(argument: Int = null): Type
 }
 
 type AnnotatedObject @onObject(arg: "value") {

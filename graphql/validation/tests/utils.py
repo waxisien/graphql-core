@@ -230,6 +230,8 @@ def expect_invalid(schema, rules, query, expected_errors, sort_list=True):
         ]
 
     if sort_list:
+        print(sort_lists(list(map(format_error, errors))))
+        print(sort_lists(expected_errors))
         assert sort_lists(list(map(format_error, errors))) == sort_lists(expected_errors)
 
     else:

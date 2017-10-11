@@ -155,6 +155,22 @@ type Root {
 }
 '''
 
+# TODO
+# def test_prints_string_field_with_int_arg_with_default_null():
+#     output = print_single_field_schema(GraphQLField(
+#         type=GraphQLString,
+#         args={'argOne': GraphQLArgument(GraphQLInt, default_value=None)}
+#     ))
+#     assert output == '''
+# schema {
+#   query: Root
+# }
+#
+# type Root {
+#   singleField(argOne: Int = null): String
+# }
+# '''
+
 
 def test_prints_string_field_with_non_null_int_arg():
     output = print_single_field_schema(GraphQLField(

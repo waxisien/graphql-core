@@ -51,6 +51,36 @@ def test_variables_with_valid_default_values():
     ''')
 
 
+def test_variables_with_default_null_values():
+    expect_passes_rule(DefaultValuesOfCorrectType, '''
+    query WithDefaultValues(
+        $a: Int = null,
+        $b: String = null,
+        $c: ComplexInput = { requiredField: true, intField: null }
+    ) {
+        dog { name }
+    }
+    ''')
+
+
+def test_variables_with_invalid_default_null_values():
+    expect_fails_rule(DefaultValuesOfCorrectType, '''
+    query WithDefaultValues(
+        $a: Int! = null,
+        $b: String = null,
+        
+    ) {
+        dog { name }
+    }
+    ''', [
+        default_for_non_null_arg('a', 'Int!', 'Int', 3, 20),
+        bad_value('a', 'Int!', 'null', 3, 20),
+        default_for_non_null_arg('b', 'String!', 'String', 4, 23),
+        bad_value('b', 'String!', 'null', 4, 23),
+
+    ])
+
+
 def test_no_required_variables_with_default_values():
     expect_fails_rule(DefaultValuesOfCorrectType, '''
     query UnreachableDefaultValues($a: Int! = 3, $b: String! = "default") {

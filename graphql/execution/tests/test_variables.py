@@ -145,6 +145,28 @@ def test_properly_parses_single_value_to_list():
     })
 
 
+def test_properly_parses_null_value_to_null():
+    doc = '''
+    {
+        fieldWithObjectInput(input: {a: null, b: null, c: "C", d: null})
+    }
+    '''
+    check(doc, {
+        'data': {'fieldWithObjectInput': stringify({"a": None, "b": None, "c": "C", "d": None})}
+    })
+
+
+def test_properly_parses_null_value_in_list():
+    doc = '''
+    {
+        fieldWithObjectInput(input: {b: ["A",null,"C"], c: "C"})
+    }
+    '''
+    check(doc, {
+        'data': {'fieldWithObjectInput': stringify({"b": ["A", None, "C"], "c": "C"})}
+    })
+
+
 def test_does_not_use_incorrect_value():
     doc = '''
     {
